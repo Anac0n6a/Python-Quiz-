@@ -5,7 +5,7 @@ class QuizApp:
     def __init__(self, master):
         self.master = master
         self.questions = self.read_questions("questions_and_answers.txt")
-        self.selected_questions_indices = random.sample(range(len(self.questions)), 90)
+        self.selected_questions_indices = random.sample(range(len(self.questions)), 10)
         self.current_question_index = 0
         self.selected_answers = []
 
@@ -35,6 +35,7 @@ class QuizApp:
                     if current_question:
                         questions.append(current_question)
                     current_question = {"number": "", "text": "", "options": [], "correct_answer": ""}
+                    current_question["number"] = line.strip()
                     ignore_lines = False
                 elif line.startswith("Correct Answer"):
                     current_question["correct_answer"] = line.split(":")[1].strip()
@@ -53,7 +54,7 @@ class QuizApp:
         question = self.questions[self.selected_questions_indices[self.current_question_index]]
         question_number = self.current_question_index + 1
         total_questions = len(self.selected_questions_indices)
-        self.question_label.config(text=f"Question {question_number}/{total_questions}\n\n{question['text']}")
+        self.question_label.config(text=f"Question {question_number}/{total_questions}\n\n{question['number']}\n{question['text']}")
 
         # Remove previous answer buttons
         for widget in self.answers_frame.winfo_children():
