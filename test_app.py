@@ -9,14 +9,17 @@ class QuizApp:
         self.current_question_index = 0
         self.selected_answers = []
 
-        self.question_label = tk.Label(master, text="", wraplength=400, justify=tk.LEFT)
-        self.question_label.pack()
+        self.question_label = tk.Label(master, text="", wraplength=400, justify=tk.LEFT, font=("Arial", 14))
+        self.question_label.pack(pady=10)
 
         self.answers_frame = tk.Frame(master)
-        self.answers_frame.pack()
+        self.answers_frame.pack(pady=10)
 
-        self.next_button = tk.Button(master, text="Next", command=self.next_question)
-        self.next_button.pack()
+        self.feedback_label = tk.Label(master, text="", font=("Arial", 12))
+        self.feedback_label.pack(pady=10)
+
+        self.next_button = tk.Button(master, text="Next", command=self.next_question, font=("Arial", 12))
+        self.next_button.pack(pady=10)
 
         self.answer_vars = []
         self.load_question()
@@ -32,7 +35,6 @@ class QuizApp:
                     if current_question:
                         questions.append(current_question)
                     current_question = {"number": "", "text": "", "options": [], "correct_answer": ""}
-                    current_question["number"] = line.strip()
                     ignore_lines = False
                 elif line.startswith("Correct Answer"):
                     current_question["correct_answer"] = line.split(":")[1].strip()
@@ -49,7 +51,9 @@ class QuizApp:
 
     def load_question(self):
         question = self.questions[self.selected_questions_indices[self.current_question_index]]
-        self.question_label.config(text=question["number"] + "\n" + question["text"])
+        question_number = self.current_question_index + 1
+        total_questions = len(self.selected_questions_indices)
+        self.question_label.config(text=f"Question {question_number}/{total_questions}\n\n{question['text']}")
 
         # Remove previous answer buttons
         for widget in self.answers_frame.winfo_children():
@@ -61,19 +65,28 @@ class QuizApp:
         for option in question["options"]:
             var = tk.BooleanVar()
             self.answer_vars.append((option[0], var))  # (Option letter, Variable)
-            answer_button = tk.Checkbutton(self.answers_frame, text=option, variable=var, wraplength=400, justify=tk.LEFT)
+            answer_button = tk.Checkbutton(self.answers_frame, text=option, variable=var, wraplength=400, justify=tk.LEFT, font=("Arial", 12))
             answer_button.pack(anchor=tk.W)
+
+        self.feedback_label.config(text="")
 
     def next_question(self):
         # Record the selected answers
         selected = ''.join(letter for letter, var in self.answer_vars if var.get())
         self.selected_answers.append(selected)
 
+        # Provide feedback
+        correct_answer = self.questions[self.selected_questions_indices[self.current_question_index]]["correct_answer"]
+        if selected == correct_answer:
+            self.feedback_label.config(text="Correct!", fg="green")
+        else:
+            self.feedback_label.config(text=f"Incorrect. The correct answer is {correct_answer}.", fg="red")
+
         if self.current_question_index < len(self.selected_questions_indices) - 1:
             self.current_question_index += 1
-            self.load_question()
+            self.master.after(1000, self.load_question)
         else:
-            self.show_results()
+            self.master.after(1000, self.show_results)
 
     def show_results(self):
         correct_count = sum(1 for i, answer in enumerate(self.selected_answers)
@@ -85,12 +98,13 @@ class QuizApp:
         self.question_label.config(text=result_text)
         for widget in self.answers_frame.winfo_children():
             widget.destroy()
+        self.feedback_label.config(text="")
         self.next_button.pack_forget()
 
 def main():
     root = tk.Tk()
     root.title("Quiz App")
-    root.geometry("600x400")
+    root.geometry("900x900")
     app = QuizApp(root)
     root.mainloop()
 
